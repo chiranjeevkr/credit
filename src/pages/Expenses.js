@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { supabase } from '../utils/supabase'
+import { OfflineStorage } from '../utils/offline'
 import { Plus, Edit2, Trash2, Save, X } from 'lucide-react'
 
-const Expenses = () => {
+const Expenses = ({ isOnline = true }) => {
   const [expenses, setExpenses] = useState([])
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState(null)
@@ -88,6 +89,22 @@ const Expenses = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    
+    if (!isOnline) {
+      // Save offline
+      const offlineExpense = OfflineStorage.saveExpenseOffline({
+        title: formData.title,
+        amount: parseFloat(formData.amount),
+        category: formData.category,
+        date: formData.date
+      })
+      setExpenses([offlineExpense, ...expenses])
+      alert('📱 Expense saved offline - will sync when online')
+      setFormData({ title: '', amount: '', category: '', date: new Date().toISOString().split('T')[0] })
+      setShowForm(false)
+      return
+    }
+
     try {
       const { data: { user } } = await supabase.auth.getUser()
       

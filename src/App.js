@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { supabase } from './utils/supabase'
+import { OfflineStorage } from './utils/offline'
 import LandingPage from './components/LandingPage'
 import Navbar from './components/Navbar'
 import Dashboard from './pages/Dashboard'
@@ -7,6 +8,7 @@ import Expenses from './pages/Expenses'
 import SplitFriends from './pages/SplitFriends'
 import Statistics from './components/Statistics'
 import BudgetPlanner from './components/BudgetPlanner'
+import InstallPrompt from './components/InstallPrompt'
 import './App.css'
 
 function App() {
@@ -16,8 +18,22 @@ function App() {
   const [showAuth, setShowAuth] = useState(false)
   const [isLogin, setIsLogin] = useState(true)
   const [error, setError] = useState(null)
+  const [isOnline, setIsOnline] = useState(navigator.onLine)
 
   useEffect(() => {
+    // Register service worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js')
+        .then(() => console.log('Service Worker registered'))
+        .catch(err => console.log('Service Worker registration failed'))
+    }
+
+    // Online/offline detection
+    const handleOnline = () => setIsOnline(true)
+    const handleOffline = () => setIsOnline(false)
+    window.addEventListener('online', handleOnline)
+    window.addEventListener('offline', handleOffline)
+
     const initAuth = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession()
@@ -42,7 +58,11 @@ function App() {
       setLoading(false)
     })
 
-    return () => subscription.unsubscribe()
+    return () => {
+      subscription.unsubscribe()
+      window.removeEventListener('online', handleOnline)
+      window.removeEventListener('offline', handleOffline)
+    }
   }, [])
 
   if (error) {
@@ -65,14 +85,20 @@ function App() {
 
   return (
     <div className="App">
+      {!isOnline && (
+        <div style={{background: '#ff6b6b', color: 'white', padding: '10px', textAlign: 'center'}}>
+          📱 Offline Mode - Changes will sync when online
+        </div>
+      )}
       <Navbar user={user} currentPage={currentPage} setCurrentPage={setCurrentPage} />
       <main className="main-content">
-        {currentPage === 'dashboard' && <Dashboard />}
-        {currentPage === 'expenses' && <Expenses />}
-        {currentPage === 'friends' && <SplitFriends />}
-        {currentPage === 'statistics' && <Statistics />}
-        {currentPage === 'budget' && <BudgetPlanner />}
+        {currentPage === 'dashboard' && <Dashboard isOnline={isOnline} />}
+        {currentPage === 'expenses' && <Expenses isOnline={isOnline} />}
+        {currentPage === 'friends' && <SplitFriends isOnline={isOnline} />}
+        {currentPage === 'statistics' && <Statistics isOnline={isOnline} />}
+        {currentPage === 'budget' && <BudgetPlanner isOnline={isOnline} />}
       </main>
+      <InstallPrompt />
     </div>
   )
 }
