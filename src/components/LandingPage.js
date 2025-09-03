@@ -9,7 +9,7 @@ const LandingPage = ({ setShowAuth, setIsLogin, showAuth, isLogin }) => {
       <header className="landing-header">
         <div className="nav-brand">
           <DollarSign size={32} />
-          <span>Medlin</span>
+          <span>eSpend</span>
         </div>
         <div className="auth-buttons">
           <button 
@@ -86,7 +86,7 @@ const LandingPage = ({ setShowAuth, setIsLogin, showAuth, isLogin }) => {
       {/* CTA Section */}
       <section className="cta-section">
         <h2>Ready to Start?</h2>
-        <p>Join thousands managing expenses with Medlin</p>
+        <p>Join thousands managing expenses with eSpend</p>
         <button 
           className="cta-button"
           onClick={() => {
@@ -110,7 +110,7 @@ const LandingPage = ({ setShowAuth, setIsLogin, showAuth, isLogin }) => {
 
       {/* Footer */}
       <footer className="landing-footer">
-        <p>&copy; 2025 Medlin. Built with React & Supabase.</p>
+        <p>&copy; 2025 eSpend. Built with React & Supabase.</p>
       </footer>
     </div>
   )

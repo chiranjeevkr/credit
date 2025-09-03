@@ -17,7 +17,7 @@ const Navbar = ({ user, currentPage, setCurrentPage }) => {
     <nav className="navbar">
       <div className="nav-brand">
         <DollarSign size={24} />
-        <span>Medlin</span>
+        <span>eSpend</span>
       </div>
       <div className="nav-links">
         <button 
