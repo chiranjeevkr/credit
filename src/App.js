@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import { supabase } from './utils/supabase'
 import LandingPage from './components/LandingPage'
-import Auth from './components/Auth'
 import Navbar from './components/Navbar'
 import Dashboard from './pages/Dashboard'
 import Expenses from './pages/Expenses'
 import SplitFriends from './pages/SplitFriends'
+import Statistics from './components/Statistics'
+import BudgetPlanner from './components/BudgetPlanner'
 import './App.css'
 
 function App() {
@@ -59,10 +60,7 @@ function App() {
   }
 
   if (!user) {
-    if (showAuth) {
-      return <Auth isLogin={isLogin} setShowAuth={setShowAuth} />
-    }
-    return <LandingPage setShowAuth={setShowAuth} setIsLogin={setIsLogin} />
+    return <LandingPage setShowAuth={setShowAuth} setIsLogin={setIsLogin} showAuth={showAuth} isLogin={isLogin} />
   }
 
   return (
@@ -72,6 +70,8 @@ function App() {
         {currentPage === 'dashboard' && <Dashboard />}
         {currentPage === 'expenses' && <Expenses />}
         {currentPage === 'friends' && <SplitFriends />}
+        {currentPage === 'statistics' && <Statistics />}
+        {currentPage === 'budget' && <BudgetPlanner />}
       </main>
     </div>
   )

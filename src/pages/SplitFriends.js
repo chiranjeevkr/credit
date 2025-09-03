@@ -455,6 +455,8 @@ const SplitFriends = () => {
         </div>
       )}
 
+
+
       {/* Summary Cards */}
       <div className="summary-cards">
         <div className="summary-card give-card">
@@ -486,9 +488,13 @@ const SplitFriends = () => {
               <h4>{friend.friend_name}</h4>
               <p>#{friend.friend_number}</p>
             </div>
-            <div className={`friend-balance ${friend.balance >= 0 ? 'positive' : 'negative'}`}>
-              ₹{Math.abs(friend.balance).toFixed(2)}
-              {friend.balance >= 0 ? ' (To take)' : ' (To give)'}
+            <div>
+              <div className={`friend-balance ${friend.balance >= 0 ? 'positive' : 'negative'}`}>
+                ₹{Math.abs(friend.balance).toFixed(2)}
+                {friend.balance >= 0 ? ' (To take)' : ' (To give)'}
+              </div>
+
+
             </div>
           </div>
         ))}
@@ -518,7 +524,7 @@ const SplitFriends = () => {
                     checked={formData.type === 'debit'}
                     onChange={(e) => setFormData({...formData, type: e.target.value})}
                   />
-                  Taken (Friend paid for you)
+                  Received (Friend paid for you)
                 </label>
                 <label>
                   <input

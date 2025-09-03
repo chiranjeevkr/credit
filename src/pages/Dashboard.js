@@ -16,35 +16,71 @@ const Dashboard = () => {
 
   const fetchStats = async () => {
     try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
       const today = new Date().toISOString().split('T')[0]
       const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0]
 
-      // Total expenses
-      const { data: totalData } = await supabase
+      // Personal expenses
+      const { data: totalData, error: totalError } = await supabase
         .from('expenses')
         .select('amount')
+        .eq('user_id', user.id)
+      
+      if (totalError) throw totalError
 
-      // Monthly expenses
       const { data: monthlyData } = await supabase
         .from('expenses')
         .select('amount')
+        .eq('user_id', user.id)
         .gte('date', monthStart)
 
-      // Today's expenses
       const { data: todayData } = await supabase
         .from('expenses')
         .select('amount')
+        .eq('user_id', user.id)
         .eq('date', today)
 
-      const totalExpenses = totalData?.reduce((sum, exp) => sum + parseFloat(exp.amount), 0) || 0
-      const monthlyExpenses = monthlyData?.reduce((sum, exp) => sum + parseFloat(exp.amount), 0) || 0
-      const todayExpenses = todayData?.reduce((sum, exp) => sum + parseFloat(exp.amount), 0) || 0
+      // Money given to friends (credit transactions, excluding deleted)
+      const { data: givenData } = await supabase
+        .from('transactions')
+        .select('amount, created_at')
+        .eq('user_id', user.id)
+        .eq('type', 'credit')
+        .neq('status', 'deleted')
+
+      // Monthly given money to friends
+      const { data: monthlyGivenData } = await supabase
+        .from('transactions')
+        .select('amount')
+        .eq('user_id', user.id)
+        .eq('type', 'credit')
+        .neq('status', 'deleted')
+        .gte('created_at', monthStart)
+
+      // Today's given money to friends
+      const { data: todayGivenData } = await supabase
+        .from('transactions')
+        .select('amount')
+        .eq('user_id', user.id)
+        .eq('type', 'credit')
+        .neq('status', 'deleted')
+        .gte('created_at', today)
+        .lt('created_at', new Date(new Date(today).getTime() + 24*60*60*1000).toISOString())
+
+      const personalExpenses = totalData?.reduce((sum, exp) => sum + parseFloat(exp.amount), 0) || 0
+      const monthlyPersonalExpenses = monthlyData?.reduce((sum, exp) => sum + parseFloat(exp.amount), 0) || 0
+      const todayPersonalExpenses = todayData?.reduce((sum, exp) => sum + parseFloat(exp.amount), 0) || 0
+      const givenToFriends = givenData?.reduce((sum, exp) => sum + parseFloat(exp.amount), 0) || 0
+      const monthlyGivenToFriends = monthlyGivenData?.reduce((sum, exp) => sum + parseFloat(exp.amount), 0) || 0
+      const todayGivenToFriends = todayGivenData?.reduce((sum, exp) => sum + parseFloat(exp.amount), 0) || 0
 
       setStats({
-        totalExpenses,
-        monthlyExpenses,
-        todayExpenses,
-        expenseCount: totalData?.length || 0
+        totalExpenses: personalExpenses + givenToFriends,
+        monthlyExpenses: monthlyPersonalExpenses + monthlyGivenToFriends,
+        todayExpenses: todayPersonalExpenses + todayGivenToFriends,
+        expenseCount: (totalData?.length || 0) + (givenData?.length || 0)
       })
     } catch (error) {
       console.error('Error fetching stats:', error)
@@ -60,7 +96,7 @@ const Dashboard = () => {
             <DollarSign size={24} />
           </div>
           <div className="stat-info">
-            <h3>Total Expenses</h3>
+            <h3>Total Spend</h3>
             <p className="stat-value">₹{stats.totalExpenses.toFixed(2)}</p>
           </div>
         </div>

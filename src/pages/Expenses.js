@@ -13,27 +13,76 @@ const Expenses = () => {
     date: new Date().toISOString().split('T')[0]
   })
   const [total, setTotal] = useState(0)
+  const [givenTransactions, setGivenTransactions] = useState([])
+  const [receivedTransactions, setReceivedTransactions] = useState([])
 
   useEffect(() => {
     fetchExpenses()
+    fetchGivenTransactions()
+    fetchReceivedTransactions()
   }, [])
 
   useEffect(() => {
-    const dailyTotal = expenses.reduce((sum, exp) => sum + parseFloat(exp.amount), 0)
-    setTotal(dailyTotal)
-  }, [expenses])
+    const expenseTotal = expenses.reduce((sum, exp) => sum + parseFloat(exp.amount), 0)
+    const givenTotal = givenTransactions.reduce((sum, trans) => sum + parseFloat(trans.amount), 0)
+    setTotal(expenseTotal + givenTotal)
+  }, [expenses, givenTransactions])
 
   const fetchExpenses = async () => {
     try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
       const { data, error } = await supabase
         .from('expenses')
         .select('*')
-        .order('date', { ascending: false })
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
 
       if (error) throw error
       setExpenses(data || [])
     } catch (error) {
       console.error('Error fetching expenses:', error)
+    }
+  }
+
+  const fetchGivenTransactions = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      const { data, error } = await supabase
+        .from('transactions')
+        .select('*, friends(friend_name)')
+        .eq('user_id', user.id)
+        .eq('type', 'credit')
+        .neq('status', 'deleted')
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+      setGivenTransactions(data || [])
+    } catch (error) {
+      console.error('Error fetching given transactions:', error)
+    }
+  }
+
+  const fetchReceivedTransactions = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      const { data, error } = await supabase
+        .from('transactions')
+        .select('*, friends(friend_name)')
+        .eq('user_id', user.id)
+        .eq('type', 'debit')
+        .neq('status', 'deleted')
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+      setReceivedTransactions(data || [])
+    } catch (error) {
+      console.error('Error fetching received transactions:', error)
     }
   }
 
@@ -174,26 +223,69 @@ const Expenses = () => {
       </div>
 
       <div className="expenses-list">
-        {expenses.map((expense) => (
-          <div key={expense.id} className="expense-item">
-            <div className="expense-info">
-              <h4>{expense.title}</h4>
-              <p className="expense-category">{expense.category}</p>
-              <p className="expense-date">{expense.date}</p>
-            </div>
-            <div className="expense-amount">
-              ₹{parseFloat(expense.amount).toFixed(2)}
-            </div>
-            <div className="expense-actions">
-              <button onClick={() => handleEdit(expense)}>
-                <Edit2 size={16} />
-              </button>
-              <button onClick={() => handleDelete(expense.id)}>
-                <Trash2 size={16} />
-              </button>
-            </div>
-          </div>
-        ))}
+        {/* Combined and sorted transactions */}
+        {[
+          ...expenses.map(expense => ({...expense, type: 'expense', sortDate: new Date(expense.created_at || expense.date)})),
+          ...givenTransactions.map(transaction => ({...transaction, type: 'given', sortDate: new Date(transaction.created_at)})),
+          ...receivedTransactions.map(transaction => ({...transaction, type: 'received', sortDate: new Date(transaction.created_at)}))
+        ]
+        .sort((a, b) => b.sortDate - a.sortDate)
+        .map((item) => {
+          if (item.type === 'expense') {
+            return (
+              <div key={`expense-${item.id}`} className="expense-item">
+                <div className="expense-info">
+                  <h4>{item.title}</h4>
+                  <p className="expense-category">{item.category}</p>
+                  <p className="expense-date">{item.date}</p>
+                </div>
+                <div className="expense-amount">
+                  ₹{parseFloat(item.amount).toFixed(2)}
+                </div>
+                <div className="expense-actions">
+                  <button onClick={() => handleEdit(item)}>
+                    <Edit2 size={16} />
+                  </button>
+                  <button onClick={() => handleDelete(item.id)}>
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              </div>
+            )
+          } else if (item.type === 'given') {
+            return (
+              <div key={`given-${item.id}`} className="expense-item" style={{borderLeft: '4px solid #10b981'}}>
+                <div className="expense-info">
+                  <h4>Given to {item.friends?.friend_name || 'Friend'}</h4>
+                  <p className="expense-category">{item.note || 'Friend payment'}</p>
+                  <p className="expense-date">{new Date(item.created_at).toLocaleDateString()}</p>
+                </div>
+                <div className="expense-amount">
+                  ₹{parseFloat(item.amount).toFixed(2)}
+                </div>
+                <div className="expense-actions">
+                  <span style={{color: '#10b981', fontSize: '12px'}}>Given</span>
+                </div>
+              </div>
+            )
+          } else {
+            return (
+              <div key={`received-${item.id}`} className="expense-item" style={{borderLeft: '4px solid #3b82f6', opacity: '0.8'}}>
+                <div className="expense-info">
+                  <h4>Received from {item.friends?.friend_name || 'Friend'}</h4>
+                  <p className="expense-category">{item.note || 'Friend payment'}</p>
+                  <p className="expense-date">{new Date(item.created_at).toLocaleDateString()}</p>
+                </div>
+                <div className="expense-amount" style={{color: '#3b82f6'}}>
+                  ₹{parseFloat(item.amount).toFixed(2)}
+                </div>
+                <div className="expense-actions">
+                  <span style={{color: '#3b82f6', fontSize: '12px'}}>Received</span>
+                </div>
+              </div>
+            )
+          }
+        })}
       </div>
     </div>
   )
