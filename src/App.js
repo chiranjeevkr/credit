@@ -49,9 +49,12 @@ function App() {
     return () => subscription.unsubscribe()
   }, [])
 
+  // Always show something to test if React is working
+  console.log('App component loaded successfully')
+  
   if (error) {
     return (
-      <div style={{display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100vh', padding: '20px', textAlign: 'center'}}>
+      <div style={{display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100vh', padding: '20px', textAlign: 'center', backgroundColor: '#f0f0f0'}}>
         <h2>Connection Error</h2>
         <p>Unable to connect to the database: {error}</p>
         <button onClick={() => window.location.reload()} style={{padding: '10px 20px', marginTop: '10px', cursor: 'pointer'}}>Retry</button>
@@ -60,7 +63,7 @@ function App() {
   }
 
   if (loading) {
-    return <div style={{display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', fontSize: '18px'}}>Loading...</div>
+    return <div style={{display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', fontSize: '18px', backgroundColor: '#f9f9f9'}}>Loading Expense Tracker...</div>
   }
 
   // Debug log
@@ -70,7 +73,12 @@ function App() {
     if (showAuth) {
       return <Auth isLogin={isLogin} setShowAuth={setShowAuth} />
     }
-    return <LandingPage setShowAuth={setShowAuth} setIsLogin={setIsLogin} />
+    return (
+      <div>
+        <div style={{position: 'fixed', top: 0, left: 0, background: 'red', color: 'white', padding: '5px', zIndex: 9999}}>React App Working!</div>
+        <LandingPage setShowAuth={setShowAuth} setIsLogin={setIsLogin} />
+      </div>
+    )
   }
 
   return (
