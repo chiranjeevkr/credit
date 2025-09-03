@@ -38,15 +38,29 @@ const LandingPage = ({ setShowAuth, setIsLogin, showAuth, isLogin }) => {
         <div className="hero-content">
           <h1>Smart Expense Tracking</h1>
           <p>Track expenses, split with friends, and manage your budget effortlessly</p>
-          <button 
-            className="cta-button"
-            onClick={() => {
-              setIsLogin(false)
-              setShowAuth(true)
-            }}
-          >
-            Get Started Free
-          </button>
+          <div className="cta-buttons">
+            <button 
+              className="cta-button"
+              onClick={() => {
+                setIsLogin(false)
+                setShowAuth(true)
+              }}
+            >
+              Get Started Free
+            </button>
+            <button 
+              className="install-button"
+              onClick={() => {
+                if ('serviceWorker' in navigator) {
+                  alert('📱 To install eSpend:\n\n• Chrome: Look for install icon in address bar\n• Mobile: Tap browser menu → "Add to Home Screen"\n• Or bookmark this page for quick access!')
+                } else {
+                  alert('📱 Bookmark this page for quick access to eSpend!')
+                }
+              }}
+            >
+              📱 Install App
+            </button>
+          </div>
         </div>
         <div className="hero-image">
           <div className="dashboard-preview">
@@ -87,15 +101,25 @@ const LandingPage = ({ setShowAuth, setIsLogin, showAuth, isLogin }) => {
       <section className="cta-section">
         <h2>Ready to Start?</h2>
         <p>Join thousands managing expenses with eSpend</p>
-        <button 
-          className="cta-button"
-          onClick={() => {
-            setIsLogin(false)
-            setShowAuth(true)
-          }}
-        >
-          Get Started Free
-        </button>
+        <div className="cta-buttons">
+          <button 
+            className="cta-button"
+            onClick={() => {
+              setIsLogin(false)
+              setShowAuth(true)
+            }}
+          >
+            Get Started Free
+          </button>
+          <button 
+            className="install-button"
+            onClick={() => {
+              alert('📱 To install eSpend:\n\n• Chrome: Look for install icon in address bar\n• Mobile: Tap browser menu → "Add to Home Screen"\n• Or bookmark this page for quick access!')
+            }}
+          >
+            📱 Install App
+          </button>
+        </div>
       </section>
 
       {/* Auth Modal */}
